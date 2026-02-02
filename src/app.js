@@ -7,9 +7,8 @@ import productTypeRoutes from "./routes/productType.routes.js";
 import billRoutes from "./routes/bill.routes.js";
 import transactionRoutes from "./routes/transaction.routes.js";
 import userRoutes from "./routes/user.routes.js";
-import dashboardRoutes from "./routes/Dashboard.route.js";
 import { errorHandler } from "./middlewares/errorHandler.js";
-
+import  dashboardRoutes from "./routes/dashboard.routes.js";
 const app = express();
 
 app.use(helmet());
