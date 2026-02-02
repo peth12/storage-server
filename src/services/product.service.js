@@ -49,16 +49,11 @@ export async function getLowProduct() {
 
 export async function getExpiredProducts() {
   const today = new Date();
-  const sevenDaysLater = new Date();
-  sevenDaysLater.setDate(today.getDate() + 7);
-
-  const todayStr = today.toISOString().split("T")[0];
-  const sevenDaysLaterStr = sevenDaysLater.toISOString().split("T")[0];
+  const todayString = today.toISOString().split('T')[0]; 
 
   const products = await Product.find({
-    expirationDate: { $gte: todayStr, $lte: sevenDaysLaterStr }
+    expirationDate: { $lte: todayString }
   });
 
   return products;
 }
-

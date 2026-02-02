@@ -32,7 +32,7 @@ export const BillController = {
     res.json(bill);
   }),
   setStatus: asyncHandler(async (req, res) => {
-    const { status, actor } = req.body; // actor = user id
+    const { status, actor } = req.body;
     if (!status || !actor) throw Object.assign(new Error("status and actor required"), { status: 400 });
     const bill = await updateBillStatus(req.params.id, status, actor);
     res.json(bill);

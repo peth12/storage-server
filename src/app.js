@@ -3,9 +3,11 @@ import cors from "cors";
 import helmet from "helmet";
 import morgan from "morgan";
 import productRoutes from "./routes/product.routes.js";
+import productTypeRoutes from "./routes/productType.routes.js";
 import billRoutes from "./routes/bill.routes.js";
 import transactionRoutes from "./routes/transaction.routes.js";
 import userRoutes from "./routes/user.routes.js";
+import dashboardRoutes from "./routes/Dashboard.route.js";
 import { errorHandler } from "./middlewares/errorHandler.js";
 
 const app = express();
@@ -18,9 +20,11 @@ app.use(morgan("dev"));
 app.get("/", (req, res) => res.json({ ok: true, name: "stock-backend" }));
 
 app.use("/api/products", productRoutes);
+app.use("/api/product-types", productTypeRoutes);
 app.use("/api/bills", billRoutes);
 app.use("/api/transactions", transactionRoutes);
 app.use("/api/users", userRoutes);
+app.use("/api/dashboard", dashboardRoutes);
 
 app.use(errorHandler);
 
