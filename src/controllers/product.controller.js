@@ -13,7 +13,7 @@ import {
 import { v2 as cloudinary } from "cloudinary";
 
 const productSchema = Joi.object({
-  appId: Joi.string().optional(),
+  appId: Joi.string().allow("").optional(),
   name: Joi.string().required(),
   type: Joi.string().required(),
   quantity: Joi.number().min(0).default(0),
