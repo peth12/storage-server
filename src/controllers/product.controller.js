@@ -10,12 +10,13 @@ import {
   getLowProduct,
   getExpiredProducts
 } from "../services/product.service.js";
+import { PRODUCT_TYPES } from "../constants/productTypes.js";
 import { v2 as cloudinary } from "cloudinary";
 
 const productSchema = Joi.object({
   appId: Joi.string().allow("").optional(),
   name: Joi.string().required(),
-  type: Joi.string().required(),
+  type: Joi.string().valid(...PRODUCT_TYPES).required(),
   quantity: Joi.number().min(0).default(0),
   price: Joi.number().min(0).required(),
   cost: Joi.number().min(0).required(),

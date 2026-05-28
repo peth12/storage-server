@@ -1,10 +1,11 @@
 import mongoose from "mongoose";
+import { PRODUCT_TYPES } from "../constants/productTypes.js";
 
 const ProductSchema = new mongoose.Schema(
   {
     appId: { type: String, index: true, trim: true },
     name: { type: String, required: true, trim: true },
-    type: { type: String, required: true },
+    type: { type: String, required: true, enum: PRODUCT_TYPES },
     quantity: { type: Number, default: 0, min: 0 },
     price: { type: Number, required: true, min: 0 },
     cost: { type: Number, required: true, min: 0 },
