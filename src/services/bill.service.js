@@ -2,6 +2,7 @@ import Bill from "../models/Bill.js";
 import Product from "../models/Product.js";
 import Transaction from "../models/Transaction.js";
 import { generateBillNumber } from "../utils/billNumber.js";
+import { deductProductLotsFIFO } from "./productLot.service.js";
 
 const TAX = Number(process.env.TAX_RATE || 0.07);
 
@@ -82,9 +83,10 @@ async function applyBillStockEffects(bill, actor) {
   // deduct and create transactions
   for (const it of bill.items) {
     const p = await Product.findById(it.productId);
-    p.quantity -= it.quantity;
-    if (p.quantity === 0) p.status = "out_of_stock";
-    await p.save();
+    const allocations = await deductProductLotsFIFO(it.productId, it.quantity, it.price);
+    it.lotAllocations = allocations;
+    it.totalCost = allocations.reduce((sum, allocation) => sum + allocation.costPerUnit * allocation.quantity, 0);
+    it.totalProfit = allocations.reduce((sum, allocation) => sum + allocation.totalProfit, 0);
 
     await Transaction.create({
       productId: p._id.toString(),
@@ -96,6 +98,9 @@ async function applyBillStockEffects(bill, actor) {
       createdBy: actor
     });
   }
+
+  bill.markModified("items");
+  await bill.save();
 }
 
 export async function getBill(id) {

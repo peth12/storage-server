@@ -10,6 +10,13 @@ import {
   getLowProduct,
   getExpiredProducts
 } from "../services/product.service.js";
+import {
+  createProductLot,
+  deleteProductLot,
+  listProductLots,
+  recalculateProductSummary,
+  updateProductLot
+} from "../services/productLot.service.js";
 import { PRODUCT_TYPES } from "../constants/productTypes.js";
 import { v2 as cloudinary } from "cloudinary";
 
@@ -20,10 +27,20 @@ const productSchema = Joi.object({
   quantity: Joi.number().min(0).default(0),
   price: Joi.number().min(0).required(),
   cost: Joi.number().min(0).required(),
-  profit: Joi.number().min(0).default(0),
+  profit: Joi.number().default(0),
   status: Joi.string().valid("active", "inactive", "out_of_stock").default("active"),
   expirationDate: Joi.string().allow(""),
   image: Joi.string().uri().allow("")
+});
+
+const productLotSchema = Joi.object({
+  lotNumber: Joi.string().allow("").optional(),
+  receivedDate: Joi.string().allow("").optional(),
+  initialQuantity: Joi.number().min(0).optional(),
+  remainingQuantity: Joi.number().min(0).optional(),
+  costPerUnit: Joi.number().min(0).optional(),
+  salePrice: Joi.number().min(0).optional(),
+  note: Joi.string().allow("").optional()
 });
 
 export const ProductController = {
@@ -72,6 +89,35 @@ export const ProductController = {
   getExpiredProducts: asyncHandler(async (req, res) => {
     const data = await getExpiredProducts();
     res.json(data);
+  }),
+
+  listLots: asyncHandler(async (req, res) => {
+    const lots = await listProductLots(req.params.id);
+    res.json(lots);
+  }),
+
+  createLot: asyncHandler(async (req, res) => {
+    const { error, value } = productLotSchema.validate(req.body);
+    if (error) throw Object.assign(new Error(error.message), { status: 400 });
+    const lot = await createProductLot(req.params.id, value);
+    res.status(201).json(lot);
+  }),
+
+  updateLot: asyncHandler(async (req, res) => {
+    const { error, value } = productLotSchema.validate(req.body, { allowUnknown: true });
+    if (error) throw Object.assign(new Error(error.message), { status: 400 });
+    const lot = await updateProductLot(req.params.id, req.params.lotId, value);
+    res.json(lot);
+  }),
+
+  deleteLot: asyncHandler(async (req, res) => {
+    await deleteProductLot(req.params.id, req.params.lotId);
+    res.status(204).end();
+  }),
+
+  recalculate: asyncHandler(async (req, res) => {
+    const product = await recalculateProductSummary(req.params.id);
+    res.json(product);
   })
   
 };

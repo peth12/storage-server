@@ -5,7 +5,8 @@
   "main": "src/server.js",
   "scripts": {
     "dev": "nodemon src/server.js",
-    "start": "node src/server.js"
+    "start": "node src/server.js",
+    "migrate:lots": "node scripts/migrateProductLots.js"
   },
   "dependencies": {
     "cloudinary": "^1.41.3",

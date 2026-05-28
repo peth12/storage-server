@@ -1,4 +1,6 @@
 import Product from "../models/Product.js";
+import ProductLot from "../models/ProductLot.js";
+import { createProductLot, deductProductLotsFIFO, ensureInitialLot, syncLotsAfterProductEdit } from "./productLot.service.js";
 
 function normalizeProductCode(appId) {
   return typeof appId === "string" ? appId.trim() : appId;
@@ -62,21 +64,25 @@ export async function createProduct(payload) {
     await assertUniqueProductCode(nextPayload.appId);
   }
   await prod.save();
+  await ensureInitialLot(prod);
   return prod;
 }
 
 export async function updateProduct(id, payload) {
+  const previousProduct = await Product.findById(id);
+  if (!previousProduct) throw Object.assign(new Error("Product not found"), { status: 404 });
   const nextPayload = normalizeStockStatus({ ...payload, appId: normalizeProductCode(payload.appId) });
   if (!nextPayload.appId) {
     nextPayload.appId = id;
   }
   await assertUniqueProductCode(nextPayload.appId, id);
   const prod = await Product.findByIdAndUpdate(id, nextPayload, { new: true, runValidators: true });
-  return prod;
+  return syncLotsAfterProductEdit(prod, previousProduct);
 }
 
 export async function deleteProduct(id) {
   await Product.findByIdAndDelete(id);
+  await ProductLot.deleteMany({ productId: id });
   return true;
 }
 
@@ -85,10 +91,18 @@ export async function adjustStock({ productId, delta }) {
   if (!prod) throw Object.assign(new Error("Product not found"), { status: 404 });
   const nextQty = prod.quantity + delta;
   if (nextQty < 0) throw Object.assign(new Error("Insufficient stock"), { status: 400 });
-  prod.quantity = nextQty;
-  prod.status = prod.quantity === 0 ? "out_of_stock" : (prod.status === "out_of_stock" ? "active" : prod.status);
-  await prod.save();
-  return prod;
+  await ensureInitialLot(prod);
+  if (delta > 0) {
+    await createProductLot(productId, {
+      initialQuantity: delta,
+      costPerUnit: prod.cost,
+      salePrice: prod.price,
+      note: "เพิ่มสต็อกจากการปรับสต็อก",
+    });
+  } else if (delta < 0) {
+    await deductProductLotsFIFO(productId, Math.abs(delta), prod.price);
+  }
+  return Product.findById(productId);
 }
 
 export async function getLowProduct() {
