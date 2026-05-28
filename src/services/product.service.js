@@ -92,8 +92,8 @@ export async function adjustStock({ productId, delta }) {
 }
 
 export async function getLowProduct() {
-  const lowStockThreshold = 5;
-  const products = await Product.find({ quantity: { $lt: lowStockThreshold } });
+  const lowStockThreshold = 10;
+  const products = await Product.find({ quantity: { $gt: 0, $lte: lowStockThreshold } });
   return products;
 }
 
